@@ -1,0 +1,582 @@
+'''
+#defining nodes
+class Node:
+    def __init__(self, value):
+        self.value = value
+        self.children = set()
+        self.childrenCost=set()
+
+    def __repr__(self):
+        return f"Node({self.value})"
+
+
+#making nodes
+node1 = Node(1)
+node2 = Node(2)
+node3 = Node(3)
+node4 = Node(4)
+
+node1.children = {node2, node3}
+node2.children = {node1, node4}
+node3.children = {node1, node4}
+node4.children = {node2, node3}
+
+
+node1.childrenCost = {node2: 1, node3: 2}
+node2.childrenCost = {node1: 1, node4: 4}
+node3.childrenCost = {node1: 2, node4: 2}
+node4.childrenCost = {node2: 4, node3: 2}
+
+
+from collections import deque
+import heapq
+
+def dijkstras(start,goal):
+    heap =[(0,start,[start])]
+    visited=set()
+    while(heap):
+        cost,current,path=heapq.heappop(heap)
+        if(current==goal):
+            return path,cost
+        
+        if(current in visited):
+            continue
+        visited.add(current)
+
+        for neighbor, edge_cost in current.childrenCost.items():
+            if neighbor not in visited:
+                new_cost=cost+edge_cost
+                new_path=path+[neighbor]
+                heapq.heappush(heap,(new_cost,neighbor,new_path))
+
+    return None, float('inf')
+
+path, total_cost = dijkstras(node1, node4)
+print("Path:", path)
+print("Cost:", total_cost)
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#This program is for visualizing the algorithms of Christofides’ Algorithm.
+
+
+import math
+import unittest
+from math import inf
+from heapdict import heapdict
+import itertools
+    
+class Vertex:
+    def __init__(self,value):
+        self.value=value
+        self.edges=[]
+        self.in_tree=False
+        self.parent=None
+
+    def add_edge(self,vertex,weight):
+        self.edges.append(Edge(vertex,weight))
+
+class Edge:
+    def __init__(self,vertex,weight):
+        self.weight=weight
+        self.vertex=vertex
+
+class Graph:
+    def __init__(self):
+        self.vertices=[]
+    
+    def add_vertices(self,vertices):
+        for vertex in vertices:
+            self.vertices.append(vertex)
+
+
+
+
+def prim(graph,start):
+    distance={}
+    remaining=heapdict()
+    weight=0
+
+    for vertex in graph.vertices:
+        distance[vertex]=remaining[vertex]=inf
+
+    distance[start]=remaining[start]=0
+
+    while(len(remaining)>0):
+        v=remaining.popitem()[0]
+        v.in_tree=True
+        if v !=start:
+            weight+= distance[v]
+            
+        for edge in v.edges:
+            w=edge.vertex
+            if distance[w]> edge.weight and w.in_tree ==False:
+                distance[w]=remaining[w]=edge.weight
+                w.parent = v
+    
+    #start of printing
+    for v in graph.vertices:
+        if v != start and v.parent is not None:
+            # Reconstruct the path by walking backwards using parent pointers
+            path = []
+            current = v
+            while current is not None:
+                path.append(current.value)
+                current = current.parent
+            path.reverse()
+            print(" -> ".join(path))
+        elif v != start:
+            print(f"{v.value} is not connected to the MST")
+
+    
+    
+    
+
+    return weight 
+
+
+
+class testclass(unittest.TestCase):
+    def test_prim(self):
+        vertices ={"A": Vertex("A"),"B": Vertex("B"),"C": Vertex("C"),"D": Vertex("D"),"E": Vertex("E"),"F": Vertex("F"),"G": Vertex("G")}
+        edges = [("A","B",12),("A","C",7),("A","D",5),("B","C",4),("B","F",7),("C","D",9),("C","E",4),("C","F",3),("D","E",7),("E","F",2)
+                 ,("E","G",5),("F","G",2)]
+        
+        for e in edges:
+            vertices[e[0]].add_edge(vertices[e[1]],e[2])
+            vertices[e[1]].add_edge(vertices[e[0]],e[2])
+
+        g=Graph()
+        g.add_vertices(vertices.values())
+
+        self.assertEqual(prim(g, vertices["A"]),23)
+
+
+        weight = prim(g, vertices["A"])
+        odd_vertices = oddDegree(g, vertices["A"])
+
+        print("Odd degree vertices:")
+        for v in odd_vertices:
+            print(v.value)
+
+    def test_prim_disconnected(self):
+        vertices ={"A": Vertex("A"),"B": Vertex("B"),"C": Vertex("C"),"D": Vertex("D"),"E": Vertex("E"),"F": Vertex("F"),"G": Vertex("G")}
+        edges = [("A","C",35),("A","D",89),("B","A",11),("C","B",28),("C","D",62),("E","A",8)]
+
+        for e in edges:
+            vertices[e[0]].add_edge(vertices[e[1]],e[2])
+
+        g=Graph()
+        g.add_vertices(vertices.values())
+
+        self.assertEqual(prim(g, vertices["A"]),math.inf)
+
+def oddDegree(graph,start):
+    degreeQuantity={v:0 for v in graph.vertices}
+    for v in graph.vertices:
+        if v.parent:
+            degreeQuantity[v]+=1
+            degreeQuantity[v.parent]+=1
+    odd=[v for v in degreeQuantity if degreeQuantity[v]%2==1]
+    return odd
+
+
+def distance_between(u, v, graph):
+    for edge in u.edges:
+        if edge.vertex == v:
+            return edge.weight
+    for edge in v.edges:
+        if edge.vertex == u:
+            return edge.weight
+    return math.inf 
+
+
+def minimum_weight_perfect_matching(odd, original_graph):
+    def total_weight(pairs):
+        return sum(distance_between(u, v, original_graph) for u, v in pairs)
+
+    def all_pairings(vertices):
+        if not vertices:
+            return [[]]
+        v1 = vertices[0]
+        rest = vertices[1:]
+        result = []
+        for i, v2 in enumerate(rest):
+            pairs = [(v1, v2)]
+            for remaining in all_pairings(rest[:i] + rest[i+1:]):
+                result.append(pairs + remaining)
+        return result
+
+    # Now try all combinations
+    min_total = math.inf
+    best_matching = None
+    for pairs in all_pairings(odd):
+        cost = total_weight(pairs)
+        if cost < min_total:
+            min_total = cost
+            best_matching = pairs
+
+    return best_matching
+
+
+
+
+if __name__ =="__main__":
+    unittest.main()
+
+
+
+
+
+
+"""
+import math
+import unittest
+from math import inf
+from heapdict import heapdict
+import itertools
+
+class Vertex:
+    def __init__(self, value):
+        self.value = value
+        self.edges = []
+        self.in_tree = False
+        self.parent = None
+
+    def add_edge(self, vertex, weight):
+        self.edges.append(Edge(vertex, weight))
+
+class Edge:
+    def __init__(self, vertex, weight):
+        self.weight = weight
+        self.vertex = vertex
+
+class Graph:
+    def __init__(self):
+        self.vertices = []
+
+    def add_vertices(self, vertices):
+        for vertex in vertices:
+            self.vertices.append(vertex)
+
+# Using Prim's algorithm to find MST
+def prim(graph, start):
+    print("Running Prim's Algorithm...")
+    distance = {}
+    remaining = heapdict()
+    weight = 0
+
+    for vertex in graph.vertices:
+        distance[vertex] = remaining[vertex] = inf
+
+    distance[start] = remaining[start] = 0
+
+    while len(remaining) > 0:
+        v = remaining.popitem()[0]
+        v.in_tree = True
+        if v != start:
+            weight += distance[v]
+
+        for edge in v.edges:
+            w = edge.vertex
+            if distance[w] > edge.weight and not w.in_tree:
+                distance[w] = remaining[w] = edge.weight
+                w.parent = v
+
+    # Printing
+    print("\nMST paths:")
+    for v in graph.vertices:
+        if v != start and v.parent is not None:
+            path = []
+            current = v
+            while current is not None:
+                path.append(current.value)
+                current = current.parent
+            path.reverse()
+            print(" -> ".join(path))
+        elif v != start:
+            print(f"{v.value} is not connected to the MST")
+
+    print(f"Total MST Weight: {weight}\n")
+    return weight
+
+# Finding odd degree vertices
+def oddDegree(graph, start):
+    print("Finding vertices with odd degree...")
+    degreeQuantity = {v: 0 for v in graph.vertices}
+    for v in graph.vertices:
+        if v.parent:
+            degreeQuantity[v] += 1
+            degreeQuantity[v.parent] += 1
+    odd = [v for v in degreeQuantity if degreeQuantity[v] % 2 == 1]
+    print("Odd degree vertices:")
+    for v in odd:
+        print(v.value)
+    print()
+    return odd
+
+# Finding distance between two vertices
+def distance_between(u, v, graph):
+    for edge in u.edges:
+        if edge.vertex == v:
+            return edge.weight
+    for edge in v.edges:
+        if edge.vertex == u:
+            return edge.weight
+    return math.inf
+
+# Finding minimum weight perfect matching (brute force)
+def minimum_weight_perfect_matching(odd, original_graph):
+    print("Finding minimum weight perfect matching (brute force)...")
+
+    def total_weight(pairs):
+        return sum(distance_between(u, v, original_graph) for u, v in pairs)
+
+    def all_pairings(vertices):
+        if not vertices:
+            return [[]]
+        v1 = vertices[0]
+        rest = vertices[1:]
+        result = []
+        for i, v2 in enumerate(rest):
+            pairs = [(v1, v2)]
+            for remaining in all_pairings(rest[:i] + rest[i + 1:]):
+                result.append(pairs + remaining)
+        return result
+
+    min_total = math.inf
+    best_matching = None
+    for pairs in all_pairings(odd):
+        cost = total_weight(pairs)
+        if cost < min_total:
+            min_total = cost
+            best_matching = pairs
+
+    print("Best matching:")
+    for u, v in best_matching:
+        print(f"{u.value} - {v.value} ({distance_between(u, v, original_graph)})")
+    print(f"Matching total weight: {min_total}\n")
+    return best_matching
+
+
+# Combining MST and matching to make a multigraph for Eulerian tour
+def build_multigraph(mst_graph, matching):
+    multigraph_edges = []
+
+    # 1. Add MST edges
+    for v in mst_graph.vertices:
+        if v.parent:
+            multigraph_edges.append((v, v.parent))
+            multigraph_edges.append((v.parent, v))  # Make it undirected
+
+    # 2. Add matching edges
+    for u, v in matching:
+        multigraph_edges.append((u, v))
+        multigraph_edges.append((v, u))
+
+    print("\nMultigraph Edges (undirected):")
+    for u, v in multigraph_edges:
+        print(f"{u.value} - {v.value}")
+
+    return multigraph_edges
+
+
+# Hierholzer's Algorithm to find the Eulerian circuit
+def find_eulerian_circuit(multigraph_edges):
+    adj = {}
+    for u, v in multigraph_edges:
+        if u not in adj:
+            adj[u] = []
+        if v not in adj:
+            adj[v] = []
+        adj[u].append(v)
+        adj[v].append(u)
+    
+    stack = []
+    circuit = []
+    start_vertex = list(adj.keys())[0]  # Start at any vertex with an edge
+    stack.append(start_vertex)
+    
+    while stack:
+        vertex = stack[-1]
+        if adj[vertex]:
+            next_vertex = adj[vertex].pop()
+            adj[next_vertex].remove(vertex)
+            stack.append(next_vertex)
+        else:
+            circuit.append(stack.pop())
+    
+    return circuit[::-1]  # Reverse the circuit to get the correct order
+
+
+# Testing
+class testclass(unittest.TestCase):
+    def test_prim(self):
+        print("\n== Running Connected Graph Test ==")
+        vertices = {
+            "A": Vertex("A"), "B": Vertex("B"), "C": Vertex("C"),
+            "D": Vertex("D"), "E": Vertex("E"), "F": Vertex("F"), "G": Vertex("G")
+        }
+        edges = [
+            ("A", "B", 12), ("A", "C", 7), ("A", "D", 5), ("B", "C", 4),
+            ("B", "F", 7), ("C", "D", 9), ("C", "E", 4), ("C", "F", 3),
+            ("D", "E", 7), ("E", "F", 2), ("E", "G", 5), ("F", "G", 2)
+        ]
+
+        for e in edges:
+            vertices[e[0]].add_edge(vertices[e[1]], e[2])
+            vertices[e[1]].add_edge(vertices[e[0]], e[2])
+
+        g = Graph()
+        g.add_vertices(vertices.values())
+
+        self.assertEqual(prim(g, vertices["A"]), 23)
+
+        odd_vertices = oddDegree(g, vertices["A"])
+        matching = minimum_weight_perfect_matching(odd_vertices, g)
+
+        # Building multigraph
+        multigraph_edges = build_multigraph(g, matching)
+
+        # Find the Eulerian circuit
+        print("\nFinding Eulerian circuit...")
+        eulerian_circuit = find_eulerian_circuit(multigraph_edges)
+        print("\nEulerian Circuit:")
+        print(" -> ".join([vertex.value for vertex in eulerian_circuit]))
+
+    def test_prim_disconnected(self):
+        print("\n== Running Disconnected Graph Test ==")
+        vertices = {
+            "A": Vertex("A"), "B": Vertex("B"), "C": Vertex("C"),
+            "D": Vertex("D"), "E": Vertex("E"), "F": Vertex("F"), "G": Vertex("G")
+        }
+        edges = [("A", "C", 35), ("A", "D", 89), ("B", "A", 11),
+                 ("C", "B", 28), ("C", "D", 62), ("E", "A", 8)]
+
+        for e in edges:
+            vertices[e[0]].add_edge(vertices[e[1]], e[2])
+
+        g = Graph()
+        g.add_vertices(vertices.values())
+
+        self.assertEqual(prim(g, vertices["A"]), math.inf)
+
+
+# Main function to tie everything together
+if __name__ == "__main__":
+    unittest.main()
+"""
+
+
+
+import tkinter as tk
+from tkinter import messagebox
+from main import GraphVisualization
+
+class GraphApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Path Visualization")
+
+        self.graph = None
+
+        # Vertex and Edge Input Section
+        self.vertex_label = tk.Label(root, text="Enter Vertices (comma separated):")
+        self.vertex_label.pack()
+
+        self.vertex_entry = tk.Entry(root, width=50)
+        self.vertex_entry.pack()
+
+        self.edge_label = tk.Label(root, text="Enter Edges (format: A-B:weight, comma separated):")
+        self.edge_label.pack()
+
+        self.edge_entry = tk.Entry(root, width=50)
+        self.edge_entry.pack()
+
+        self.build_graph_button = tk.Button(root, text="Build Graph", command=self.build_graph)
+        self.build_graph_button.pack()
+
+        # Pathfinding Section
+        self.path_label = tk.Label(root, text="Enter nodes to visit (comma separated):")
+        self.path_label.pack()
+
+        self.path_entry = tk.Entry(root, width=50)
+        self.path_entry.pack()
+
+        self.find_path_button = tk.Button(root, text="Find Best Path", command=self.find_best_path)
+        self.find_path_button.pack()
+
+        # Result Display Section
+        self.result_label = tk.Label(root, text="Best Path:")
+        self.result_label.pack()
+
+        self.result_text = tk.Label(root, text="", fg="green")
+        self.result_text.pack()
+
+    def build_graph(self):
+        vertices_input = self.vertex_entry.get()
+        edges_input = self.edge_entry.get()
+
+        vertices = vertices_input.split(",")  # Split vertices by comma
+        edges = [edge.split(":") for edge in edges_input.split(",")]  # Split each edge by comma and ':'
+
+        self.graph = GraphVisualization()
+
+        # Add vertices to the graph
+        for vertex in vertices:
+            self.graph.add_vertex(vertex.strip())
+
+        # Add edges to the graph
+        for edge in edges:
+            node1, node2_weight = edge[0].strip(), edge[1].strip()
+            node2, weight = node2_weight.split("-")
+            self.graph.add_edge(node1, node2.strip(), int(weight))
+
+        messagebox.showinfo("Graph Built", "Graph has been successfully created!")
+
+    def find_best_path(self):
+        if not self.graph:
+            messagebox.showerror("Error", "Please build the graph first!")
+            return
+
+        nodes_to_visit_input = self.path_entry.get()
+        nodes_to_visit = nodes_to_visit_input.split(",")  # Split nodes to visit by comma
+        nodes_to_visit = [node.strip() for node in nodes_to_visit]
+
+        best_path, total_weight = self.graph.find_best_path(nodes_to_visit)
+
+        if best_path:
+            self.result_text.config(text=f"Best Path: {' -> '.join(best_path)}\nTotal Weight: {total_weight}")
+        else:
+            self.result_text.config(text="No valid path found!")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = GraphApp(root)
+    root.mainloop()
