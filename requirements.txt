@@ -1,0 +1,7 @@
+Requires:
+pygame
+math
+PriorityQueu (from queue)
+
+pip install for each may be necessary for your python. 
+Must be run through compiler
