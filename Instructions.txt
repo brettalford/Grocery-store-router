@@ -1,6 +1,7 @@
 Download project files,
 Open project in python environment,
-Ensure required (listed in requirements) packages are installed
+Ensure required (listed in requirements) packages are installed,
+Run python file,
 First left click assigns start location,
 Following left clicks assign locations to be visited,
 Right click to remove a location,
