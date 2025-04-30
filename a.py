@@ -7,11 +7,7 @@ WIN = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("A* Path Finder")
 
 RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
 PURPLE = (128, 0, 128)
 ORANGE = (255, 165, 0)
 GREY = (126, 126, 126)
@@ -39,8 +35,7 @@ class Spot:
     def is_end(self):
         return self.color == PURPLE
 
-    def reset(self):
-        self.color = WHITE
+    
 
     def make_start(self):
         self.color = ORANGE
@@ -49,7 +44,7 @@ class Spot:
         self.color = PURPLE
 
     def make_path(self):
-        self.color = YELLOW
+        self.color = RED
 
     def draw(self, win):
         if self.color != WHITE:
